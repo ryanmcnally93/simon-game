@@ -5,8 +5,13 @@ newGame()
 - clear the currentGame array
 addTurn()
 showTurns()
+- lightson = randomly generated button(s)
 lightsOn()
 playerTurn()
+check if clicked button is same as requested one
+add to score
+start next turn
+display alert and new game if wrong
 showScore()
 */
 
@@ -14,6 +19,9 @@ let game = {
     score: 0,
     currentGame: [],
     playerMoves: [],
+    turnNumber: 0,
+    lastButton: "",
+    turnInProgress: false,
     choices: ["button1", "button2", "button3", "button4"],
 }
 
@@ -21,6 +29,21 @@ function newGame() {
     game.playerMoves = [];
     game.currentGame = [];
     game.score = 0;
+    game.turnNumber = 0;
+    for (let circle of document.getElementsByClassName("circle")) {
+        if (circle.getAttribute("data-listener") !== "true") {
+            circle.addEventListener("click", (e) => {
+                if (game.currentGame.length > 0 && !game.turnInProgress) {
+                    let move = e.target.getAttribute("id");
+                    game.lastButton = move;
+                    lightsOn(move);
+                    game.playerMoves.push(move);
+                    playerTurn();
+                }
+            });
+            circle.setAttribute("data-listener", "true");
+        };
+    };
     showScore();
     addTurn();
 }
@@ -28,7 +51,7 @@ function newGame() {
 function addTurn() {
     game.playerMoves = [];
     game.currentGame.push(game.choices[(Math.floor(Math.random() * 4))]);
-    // showTurns();
+    showTurns();
 }
 
 function showScore() {
@@ -37,9 +60,40 @@ function showScore() {
 
 function lightsOn(circ) {
     document.getElementById(circ).classList.add("light");
-    setTimeout(() => {
+    setTimeout(function () {
         document.getElementById(circ).classList.remove("light");
     }, 400);
 }
 
-module.exports = { game, newGame, showScore, addTurn, lightsOn };
+function showTurns() {
+    game.turnInProgress = true;
+    game.turnNumber = 0;
+    let turns = setInterval(function () {
+        lightsOn(game.currentGame[game.turnNumber]);
+        game.turnNumber++;
+        if (game.turnNumber >= game.currentGame.length) {
+            clearInterval(turns);
+            game.turnInProgress = false;
+        }
+    }, 800);
+}
+
+function playerTurn() {
+    //this gets the index of the last element
+    let i = game.playerMoves.length - 1;
+    // checks if it is same index from currenrGame array
+    if (game.currentGame[i] === game.playerMoves[i]) {
+        if (game.currentGame.length === game.playerMoves.length) {
+            game.score++;
+            showScore();
+            addTurn();
+        }
+    } else {
+        alert("Wrong move!");
+        newGame();
+    }
+}
+
+//get the index of the last element of the moves array
+
+module.exports = { game, newGame, showScore, addTurn, lightsOn, showTurns, playerTurn };
